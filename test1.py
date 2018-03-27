@@ -4,10 +4,11 @@ import os
 import sys
 from arcpy import env
 import operator
-def checkdictionary(dicti):
+def checkdictionary():
     print ("checking the dictionary")
-    print(dicti)
     a = max(dicti.iteritems(), key=operator.itemgetter(1))[0]
+    print ("printing the highest area value")
+    print (a)
     if (a == "AGR"):
         var["AGR"]= var["AGR"]+1
         print (var)
@@ -92,13 +93,13 @@ print("traversing through the rows")
 cursor = arcpy.SearchCursor(dissolved_sorted, sort_fields = "PARCELKEY; area")
 row = cursor.next()
 dicti = {}
+lyr = arcpy.MakeFeatureLayer_management(dissolved_sorted, "lyr")
 while row:
-    dicti.clear()
+    #dicti.clear()
     parcel_key = row.getValue("PARCELKEY")
     #select by attribute the value of parcel key
     query = """ "PARCELKEY" = '%s'"""%parcel_key
-    arcpy.MakeFeatureLayer_management(dissolved_sorted, "lyr")
-    print (arcpy.SelectLayerByAttribute_management("lyr", "NEW_SELECTION", query))
+    print (arcpy.SelectLayerByAttribute_management(lyr, "NEW_SELECTION", query))
     cursor1 = arcpy.SearchCursor(arcpy.SelectLayerByAttribute_management("lyr", "NEW_SELECTION", query))
     row1 = cursor1.next()
     while row1:
@@ -110,6 +111,18 @@ while row:
         print (level)
         print("------------------------------------------------------------")
         dicti[level] = area
-        row1 = cursor.next()
-        checkdictionary(dicti)
+        row1 = cursor1.next()
+        #check the end of the row and call  the function checkdictionary (dicti)
+    checkdictionary()
+    del row1
     row = cursor.next()
+del row
+
+
+
+
+
+
+
+
+    
