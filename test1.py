@@ -4,8 +4,9 @@ import os
 import sys
 from arcpy import env
 import operator
-def checkdictionary():
+def checkdictionary(dicti):
     print ("checking the dictionary")
+    print (dict)
     a = max(dicti.iteritems(), key=operator.itemgetter(1))[0]
     print ("printing the highest area value")
     print (a)
@@ -50,8 +51,8 @@ env.workspace = "C:\Users\poshan\Desktop\spatial_join"
 # Local variables:
 present_landuse = "Bhumlu_Present_Landuse.shp"
 parcel = "157-1175.shp"
-intersect = "present_landuse_intersect_parcel.shp"
-dissolved = "dissolved2.shp"
+intersect = "present_landuse_intersect_parcel1.shp"
+dissolved = "dissolved1.shp"
 
 
 # Process: Intersect
@@ -95,7 +96,8 @@ row = cursor.next()
 dicti = {}
 lyr = arcpy.MakeFeatureLayer_management(dissolved_sorted, "lyr")
 while row:
-    #dicti.clear()
+    dicti.clear()
+    counter = 0
     parcel_key = row.getValue("PARCELKEY")
     #select by attribute the value of parcel key
     query = """ "PARCELKEY" = '%s'"""%parcel_key
@@ -112,10 +114,14 @@ while row:
         print("------------------------------------------------------------")
         dicti[level] = area
         row1 = cursor1.next()
+        counter = counter + 1
         #check the end of the row and call  the function checkdictionary (dicti)
-    checkdictionary()
+    checkdictionary(dicti)
     del row1
-    row = cursor.next()
+    i = 0
+    while i < counter:
+        row = cursor.next()
+        i = i + 1
 del row
 
 
