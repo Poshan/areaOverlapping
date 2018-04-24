@@ -2,8 +2,14 @@
 import arcpy
 import os
 import sys
+import csv
 from arcpy import env
 import operator
+from Tkinter import Tk
+from tkFileDialog import askopenfilename
+from tkFileDialog import askdirectory
+from progress.bar import Bar
+
 def checkdictionary(dicti):
     print ("checking the dictionary")
     print (dict)
@@ -47,14 +53,25 @@ def checkdictionary(dicti):
 
 
 #defining the workspace
-env.workspace = "C:\Users\poshan\Desktop\spatial_join"
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+a = askdirectory(title = "Select the workspace")
+env.workspace = a
+#env.workspace = "C:\Users\poshan\Desktop\spatial_join"
+
 # Local variables:
-present_landuse = "Bhumlu_Present_Landuse.shp"
-parcel = "157-1175.shp"
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+present_landuse = askopenfilename( filetypes = (("Shapefiles","*.shp"),("ALl Files","*.*")), title = "Choose the Present Landuse or Landuse Zoning") # show an "Open" dialog box and return the path to the selected file
+
+#present_landuse = "Bhumlu_Present_Landuse.shp"
+
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+parcel = askopenfilename( filetypes = (("Shapefiles","*.shp"),("ALl Files","*.*")), title = "Choose the Parcel") # show an "Open" dialog box and return the path to the selected file
+
 intersect = "present_landuse_intersect_parcel1.shp"
 dissolved = "dissolved1.shp"
 
-
+bar = Bar('Processing', max=20)
+bar.next()
 # Process: Intersect
 print("Performing the intersection of present landuse and parcel")
 arcpy.Intersect_analysis([present_landuse,parcel], intersect, "ALL", "", "INPUT")
@@ -124,9 +141,21 @@ while row:
         i = i + 1
 del row
 
+arcpy.Delete_management(intersect)
+arcpy.Delete_management(dissolved)
+arcpy.Delete_management(dissolved_shp)
+arcpy.Delete_management(dissolved_sorted)
 
-
-
+#write csv file
+with open('stat.csv', 'w') as csvfile:
+    fieldnames = ['LandUse', 'No of Parcel']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for k in var:
+        writer.writerow({'LandUse':k, 'No of Parcel':var[k]})
+        bar.next()
+bar.finish()    
+    
 
 
 
