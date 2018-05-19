@@ -10,9 +10,24 @@ from tkFileDialog import askopenfilename
 from tkFileDialog import askdirectory
 from progress.bar import Bar
 
+def addZeros(field,length,where):
+    if (where == "Before"):
+        val = ""
+        i = len(field)
+        while i < length:
+            val += "0"
+        val += field
+        return val
+    elif (where == "After"):
+        val = field
+        i = len(field)
+        while i < length:
+            val += "0"
+        return val
+    else:
+        return
+        
 def checkdictionary(dicti):
-    print ("checking the dictionary")
-    print (dict)
     a = max(dicti.iteritems(), key=operator.itemgetter(1))[0]
     print ("printing the highest area value")
     print (a)
@@ -70,8 +85,6 @@ parcel = askopenfilename( filetypes = (("Shapefiles","*.shp"),("ALl Files","*.*"
 intersect = "present_landuse_intersect_parcel1.shp"
 dissolved = "dissolved1.shp"
 
-bar = Bar('Processing', max=20)
-bar.next()
 # Process: Intersect
 print("Performing the intersection of present landuse and parcel")
 arcpy.Intersect_analysis([present_landuse,parcel], intersect, "ALL", "", "INPUT")
@@ -79,7 +92,7 @@ arcpy.Intersect_analysis([present_landuse,parcel], intersect, "ALL", "", "INPUT"
 
 # Process: Dissolve
 print("Performing the dissolve of the intersection based on present land use and parcel key")
-dissolved_shp = arcpy.Dissolve_management(intersect, dissolved, "LEVEL1;PARCELKEY", "", "MULTI_PART", "DISSOLVE_LINES")
+dissolved_shp = arcpy.Dissolve_management(intersect, dissolved, "ZoneType;PARCELKEY", "", "MULTI_PART", "DISSOLVE_LINES")
 
 #add a field area in the table
 # Set local variables
@@ -121,26 +134,67 @@ while row:
     print (arcpy.SelectLayerByAttribute_management(lyr, "NEW_SELECTION", query))
     cursor1 = arcpy.SearchCursor(arcpy.SelectLayerByAttribute_management("lyr", "NEW_SELECTION", query))
     row1 = cursor1.next()
-    while row1:
-        parcel_key1 = row1.getValue("PARCELKEY")
-        print (parcel_key1)
-        area = row1.getValue("area")
-        print (area)
-        level = row1.getValue("LEVEL1")
-        print (level)
-        print("------------------------------------------------------------")
-        dicti[level] = area
-        row1 = cursor1.next()
-        counter = counter + 1
-        #check the end of the row and call  the function checkdictionary (dicti)
-    checkdictionary(dicti)
-    del row1
-    i = 0
-    while i < counter:
-        row = cursor.next()
-        i = i + 1
+    if (arcpy.GetCount_management(arcpy.SelectLayerByAttribute_management(lyr, "NEW_SELECTION", query))[0]=='1'):
+        while row1:
+            print ("no need to check")
+            a1 = row1.getValue("ZoneType")
+            if (a1 == "AGR"):
+                var["AGR"] = var["AGR"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "COM"):
+                var["COM"] = var["COM"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "CULARCH"):
+                var["CULARCH"] = var["CULARCH"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "FOR"):
+                var["FOR"] = var["FOR"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "HYD"):
+                var["HYD"] = var["HYD"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "OTH"):
+                var["OTH"] = var["OTH"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "PUB"):
+                var["PUB"] = var["PUB"] + 1
+                print (var)
+                dicti.clear()
+            elif (a1 == "RES"):
+                var["RES"] = var["RES"] + 1
+                print (var)
+                dicti.clear()
+            row1 = cursor1.next()
+            counter = counter + 1
+        del row1
+        i = 0
+        while i < counter:
+            row = cursor.next()
+            i = i + 1
+    else:
+        while row1:
+            parcel_key1 = row1.getValue("PARCELKEY")
+            area = row1.getValue("area")
+            level = row1.getValue("ZoneType")
+            dicti[level] = area
+            #check the end of the row and call  the function check
+            row1 = cursor1.next()
+            counter = counter + 1
+        checkdictionary(dicti)
+        del row1
+        i = 0
+        while i < counter:
+            row = cursor.next()
+            i = i + 1
 del row
 
+#deleting intermediate shapefiles
 arcpy.Delete_management(intersect)
 arcpy.Delete_management(dissolved)
 arcpy.Delete_management(dissolved_shp)
@@ -153,9 +207,8 @@ with open('stat.csv', 'w') as csvfile:
     writer.writeheader()
     for k in var:
         writer.writerow({'LandUse':k, 'No of Parcel':var[k]})
-        bar.next()
-bar.finish()    
-    
+
+
 
 
 
