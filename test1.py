@@ -207,7 +207,7 @@ with open('stat.csv', 'w') as csvfile:
     writer.writeheader()
     for k in var:
         writer.writerow({'LandUse':k, 'No of Parcel':var[k]})
-
+#poshan changed
 
 
 
